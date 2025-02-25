@@ -4,23 +4,24 @@ The project is carried out in an interactive simulator on the Yandex Praktikum p
 Database ER diagram:
 ![Image (2)](https://github.com/user-attachments/assets/93c3ce26-1151-401d-bd00-7633869c79c4)
 
-### Таблица `badges`
-Хранит информацию о значках, которые присуждаются за разные достижения. Например, пользователь, правильно ответивший на большое количество вопросов про PostgreSQL, может получить значок `postgresql`.
+## Badges Table
+Stores information about badges awarded for various achievements. For example, a user who answers a large number of questions about PostgreSQL correctly might receive the "postgresql" badge.
 
-| Поле           | Описание                                                       |
-|----------------|---------------------------------------------------------------|
-| `id`           | Идентификатор значка, первичный ключ таблицы                  |
-| `name`         | Название значка                                               |
-| `user_id`      | Идентификатор пользователя, которому присвоили значок, внешний ключ, отсылающий к таблице `users` |
-| `creation_date`| Дата присвоения значка                                        |
+| Field          | Description                                                                   |
+|----------------|-------------------------------------------------------------------------------|
+| `id`           | Badge identifier, primary key of the table                                    |
+| `name`         | Name of the badge                                                             |
+| `user_id`      | User identifier, foreign key referencing the `users` table                     |
+| `creation_date`| Date when the badge was awarded                                               |
 
-### Таблица `post_types`
-Содержит информацию о типе постов. Их может быть два:
-- `Question` — пост с вопросом
-- `Answer` — пост с ответом
+## Post Types Table
+Contains information about the types of posts. There are two possible types:
+- `Question` — a post with a question
+- `Answer` — a post with an answer
 
-| Поле           | Описание                                                   |
-|----------------|-----------------------------------------------------------|
-| `id`           | Идентификатор поста, первичный ключ таблицы              |
-| `type`         | Тип поста                                                |
+| Field        | Description                                                               |
+|--------------|---------------------------------------------------------------------------|
+| `id`         | Post identifier, primary key of the table                                  |
+| `type`       | Type of the post                                                          |
+
 
