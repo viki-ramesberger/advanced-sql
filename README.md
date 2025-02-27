@@ -4,7 +4,7 @@ The project is carried out in an interactive simulator on the Yandex Praktikum p
 Database ER diagram:
 ![Image (2)](https://github.com/user-attachments/assets/93c3ce26-1151-401d-bd00-7633869c79c4)
 
-## Badges Table
+## `badges` Table
 Stores information about badges awarded for various achievements. For example, a user who answers a large number of questions about PostgreSQL correctly might receive the "postgresql" badge.
 
 | Field          | Description                                                                   |
@@ -14,7 +14,7 @@ Stores information about badges awarded for various achievements. For example, a
 | `user_id`      | User identifier, foreign key referencing the `users` table                     |
 | `creation_date`| Date when the badge was awarded                                               |
 
-## Post Types Table
+## `post_types` Table
 Contains information about the types of posts. There are two possible types:
 - `Question` — a post with a question
 - `Answer` — a post with an answer
@@ -24,7 +24,7 @@ Contains information about the types of posts. There are two possible types:
 | `id`         | Post identifier, primary key of the table                                  |
 | `type`       | Type of the post                                                          |
 
-## Posts Table
+## `posts` Table
 Contains information about posts.
 
 | Field               | Description                                                                  |
@@ -41,7 +41,7 @@ Contains information about posts.
 | `score`             | Number of points the post has accumulated                                    |
 | `views_count`       | Number of views the post has received                                        |
 
-## Users Table
+## `users` Table
 Contains information about users.
 
 | Field               | Description                                                                  |
@@ -54,7 +54,7 @@ Contains information about users.
 | `reputation`        | Reputation points received for good questions and helpful answers            |
 | `views`             | Number of profile views                                                      |
 
-## Vote Types Table
+## `vote_types` Table
 Contains information about the types of votes. A vote is a label that users assign to a post. There are several types:
 - `UpMod` — A mark given to posts with questions or answers deemed relevant and helpful by users.
 - `DownMod` — A mark given to posts that users found less useful.
@@ -67,7 +67,7 @@ Contains information about the types of votes. A vote is a label that users assi
 | `id`         | Vote type identifier, primary key                                          |
 | `name`       | Name of the vote type                                                     |
 
-## Votes Table
+## `votes` Table
 Contains information about votes on posts.
 
 | Field           | Description                                                                  |
