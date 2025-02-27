@@ -135,8 +135,32 @@ Show the following fields:
 - Number of views
 Sort the table by views in descending order, then by user ID in ascending order.*/
 
-
-
+WITH UserGroups AS (
+    SELECT
+        id AS user_id,
+        views,
+        CASE
+            WHEN views >= 350 THEN 1
+            WHEN views >= 100 THEN 2
+            ELSE 3
+        END AS group_number
+    FROM stackoverflow.users
+    WHERE location LIKE '%Canada%' AND views > 0
+),
+MaxViews AS (
+    SELECT
+        group_number,
+        MAX(views) AS max_views
+    FROM UserGroups
+    GROUP BY group_number
+)
+SELECT
+    u.user_id,
+    u.views,
+    u.group_number
+FROM UserGroups u
+JOIN MaxViews m ON u.group_number = m.group_number AND u.views = m.max_views
+ORDER BY u.views DESC, u.user_id;
 
 /* Task 12. Calculate the daily increase in new users in November 2008.
 Create a table with the following fields:
@@ -144,11 +168,32 @@ Create a table with the following fields:
 - Number of users who registered on that day
 - Cumulative total of registered users*/
 
+WITH x AS (
+    SELECT EXTRACT(DAY FROM creation_date) AS day_reg,
+           COUNT(id) AS count_id
+    FROM stackoverflow.users
+    WHERE CAST(DATE_TRUNC('month', creation_date) AS date) BETWEEN '2008-11-01' AND '2008-11-30'
+    GROUP BY day_reg
+)
+SELECT *,
+       SUM(count_id) OVER (ORDER BY day_reg)
+FROM x
+ORDER BY day_reg;
 
 /* Task 13. For each user who has written at least one post, find the time interval between their registration and the creation of their first post.
 Display:
 - User ID
 - Time difference between registration and first post*/
+
+WITH b AS (
+    SELECT user_id AS users_p,
+           FIRST_VALUE(creation_date) OVER (PARTITION BY user_id ORDER BY creation_date) AS first_post
+    FROM stackoverflow.posts
+)
+SELECT DISTINCT users_p,
+       first_post - u.creation_date AS dif
+FROM b
+INNER JOIN stackoverflow.users AS u ON u.id = users_p;
 
 
 
