@@ -1,3 +1,5 @@
+-- First Part of the Project --
+
 /* Task 1. Find the number of questions that have gained more than 300 points or have been added to "Bookmarks" at least 100 times. */
 
 SELECT COUNT(id)
@@ -195,5 +197,203 @@ SELECT DISTINCT users_p,
 FROM b
 INNER JOIN stackoverflow.users AS u ON u.id = users_p;
 
+-- Second Part of the Project --
+
+/* Task 1. Monthly Post Views in 2008:
+- Calculate the total number of post views for each month in 2008. 
+If data for any month is missing, exclude that month from the results.
+- Sort the results in descending order of total views.*/
+
+SELECT DATE_TRUNC('month', creation_date)::date AS month_date,
+       SUM(views_count) AS total_views
+FROM stackoverflow.posts
+WHERE creation_date BETWEEN '2008-01-01' AND '2008-12-31'
+GROUP BY month_date
+ORDER BY total_views DESC;
+
+/* Task 2. Most Active Users in the First Month:
+- Identify users who, in the first month after registration (including the registration day), have provided more than 100 answers.
+- Do not consider questions asked by users.
+- For each user's name, display the count of unique user_id values.
+- Sort the results lexicographically by the user's name.*/
+
+WITH user_activity AS (
+    SELECT
+        u.id AS user_id,
+        u.display_name,
+        COUNT(p.id) AS answer_count,
+        MIN(u.creation_date) AS registration_date
+    FROM
+        stackoverflow.users u
+    JOIN
+        stackoverflow.posts p ON u.id = p.user_id
+    WHERE
+        p.post_type_id = 2 -- Ответы
+    GROUP BY
+        u.id, u.display_name
+)
+SELECT
+    display_name,
+    COUNT(DISTINCT user_id) AS unique_user_count
+FROM
+    user_activity
+WHERE
+    answer_count > 100
+    AND registration_date BETWEEN '2008-11-01' AND '2008-11-30'
+GROUP BY
+    display_name
+ORDER BY
+    display_name;
+
+/* Task 3.Monthly Post Counts for September and December 2008:
+- Calculate the number of posts for each month in 2008.
+- Filter posts from users who registered in September 2008 and made at least one post in December of the same year.
+- Sort the table by the month in descending order.*/
+
+WITH september_users AS (
+    SELECT
+        id AS user_id
+    FROM
+        stackoverflow.users
+    WHERE
+        EXTRACT(MONTH FROM creation_date) = 9
+        AND EXTRACT(YEAR FROM creation_date) = 2008
+),
+december_posts AS (
+    SELECT
+        user_id,
+        EXTRACT(MONTH FROM creation_date) AS month,
+        COUNT(id) AS post_count
+    FROM
+        stackoverflow.posts
+    WHERE
+        EXTRACT(MONTH FROM creation_date) = 12
+        AND EXTRACT(YEAR FROM creation_date) = 2008
+    GROUP BY
+        user_id, month
+)
+SELECT
+    dp.month,
+    SUM(dp.post_count) AS total_posts
+FROM
+    december_posts dp
+JOIN
+    september_users su ON dp.user_id = su.user_id
+GROUP BY
+    dp.month
+ORDER BY
+    dp.month DESC;
+
+/* Task 4.User Post Details with Cumulative Views:
+- Using post data, display the following fields:
+  - User ID of the post author.
+  - Post creation date.
+  - Number of views for the current post.
+  - Cumulative sum of views for the author's posts.
+- Sort the data by ascending user IDs, and for each user, by ascending post creation dates.*/
+
+WITH post_views AS (
+    SELECT
+        p.user_id,
+        p.creation_date,
+        p.views,
+        SUM(p.views) OVER (PARTITION BY p.user_id ORDER BY p.creation_date) AS cumulative_views
+    FROM
+        stackoverflow.posts p
+)
+SELECT
+    pv.user_id,
+    pv.creation_date,
+    pv.views,
+    pv.cumulative_views
+FROM
+    post_views pv
+ORDER BY
+    pv.user_id ASC,
+    pv.creation_date ASC;
+
+/* Task 5.Average Daily Posts in August 2008:
+- Calculate the average number of posts per day for users in August 2008.
+- Filter data for users who published more than 120 posts in August.
+- Exclude days without publications.
+- Sort the results by ascending average number of posts.
+- Do not round the values.*/
+
+WITH august_posts AS (
+    SELECT
+        user_id,
+        COUNT(id) AS post_count
+    FROM
+        stackoverflow.posts
+    WHERE
+        EXTRACT(MONTH FROM creation_date) = 8
+        AND EXTRACT(YEAR FROM creation_date) = 2008
+    GROUP BY
+        user_id
+)
+SELECT
+    user_id,
+    post_count / 31.0 AS avg_posts_per_day
+FROM
+    august_posts
+WHERE
+    post_count > 120
+ORDER BY
+    avg_posts_per_day ASC;
+
+/* Task 6.Average Active Days from December 1 to 7, 2008:
+- Calculate the average number of days users interacted with the platform between December 1 and 7, 2008.
+- For each user, consider days when they published at least one post.
+- Provide a single integer result.
+- Round the result appropriately.*/
+
+WITH user_activity AS (
+    SELECT
+        user_id,
+        COUNT(DISTINCT DATE(creation_date)) AS active_days
+    FROM
+        stackoverflow.posts
+    WHERE
+        creation_date BETWEEN '2008-12-01' AND '2008-12-07'
+    GROUP BY
+        user_id
+)
+SELECT
+    ROUND(AVG(active_days)) AS avg_active_days
+FROM
+    user_activity;
+
+/* Task 7. User Activity History with Second-Last Post Month:
+- Display each user's activity history in the following format:
+  - User ID.
+  - Post publication date.
+- Sort the output by ascending user IDs, and for each user, by ascending post publication dates.
+- Add a new field to the table: for each post, indicate the month of the user's second-last publication relative to the current post. 
+If such a publication does not exist, indicate NULL.
+- Note: Python will automatically convert NULL to None, but no additional conversion is necessary.
+- Carefully observe the sample table: for the first two posts, there is no second-last publication, so the new field will be NULL. 
+Starting from the third post, the field will contain the appropriate month. 
+For the next user, the first two entries will also have NULL in the new field.*/
+
+WITH user_posts AS (
+    SELECT
+        user_id,
+        creation_date,
+        LEAD(EXTRACT(MONTH FROM creation_date)) OVER (PARTITION BY user_id ORDER BY creation_date DESC) AS second_last_month
+    FROM
+        stackoverflow.posts
+)
+SELECT
+    user_id,
+    creation_date,
+    CASE
+        WHEN second_last_month IS NULL THEN NULL
+        ELSE TO_CHAR(TO_DATE(second_last_month::text, 'MM'), 'Month')
+    END AS second_last_month
+FROM
+    user_posts
+ORDER BY
+    user_id ASC,
+    creation_date ASC;
 
 
